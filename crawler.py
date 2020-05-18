@@ -28,16 +28,27 @@ def crawl():
             break
 
         for item in soup.findAll('li', class_='grid-6'):
-            rating_str = item.find('div', class_='UserRatingStarStrip').get_text(strip=True)
+            link = 'https://marketplace.xbox.com' + item.find('a').get('href')
+            response = requests.get(link,headers=headers)
+            soup = BeautifulSoup(response.content, 'html.parser')
+
+            rating_str = soup.find('div', class_='UserRatingStarStrip').get_text(strip=True)
+            # publishing = soup.find('ul', {"id": "ProductPublishing"}).get_text(strip=True)
             game = dict(
-                title=item.find('h2').get_text(strip=True),
-                rating=float(rating_str.split(' ')[0])
+                title=soup.find('h1').get_text(strip=True),
+                rating=float(rating_str.split(' ')[0]),
+                # release_date=publishing(),
+                link=link
             )
+
+            if soup.find('span', class_='ProductPrice'):
+                game['price']=soup.find('span', class_='ProductPrice').get_text(strip=True)
+
             games.append(game)
+
             print("Parsed game:", game)
-
+        
         page_number += 1
-
 
 if __name__ == '__main__':
     crawl()
